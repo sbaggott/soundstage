@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { AudioEngine } from './audio/engine';
+import { DEFAULT_ROOM, getRoom, type RoomId } from './rooms';
 import { Stage } from './scene/Stage';
 import { STEMS, type StagePosition, type StemId } from './stems';
+import { RoomPicker } from './ui/RoomPicker';
 import { Transport } from './ui/Transport';
 
 type Positions = Record<StemId, StagePosition>;
@@ -14,6 +16,8 @@ export function App() {
   const [loaded, setLoaded] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [positions, setPositions] = useState<Positions>(homePositions);
+  const [roomId, setRoomId] = useState<RoomId>(DEFAULT_ROOM.id);
+  const room = getRoom(roomId);
 
   useEffect(() => {
     let cancelled = false;
@@ -42,6 +46,11 @@ export function App() {
     setPositions((prev) => ({ ...prev, [id]: position }));
   }
 
+  function chooseRoom(id: RoomId) {
+    engine?.setRoom(getRoom(id));
+    setRoomId(id);
+  }
+
   function reset() {
     const home = homePositions();
     for (const stem of STEMS) engine?.setPosition(stem.id, home[stem.id]);
@@ -58,8 +67,9 @@ export function App() {
       {engine ? (
         <>
           <div className="app__stage">
-            <Stage engine={engine} positions={positions} onMove={move} />
+            <Stage engine={engine} positions={positions} room={room} onMove={move} />
           </div>
+          <RoomPicker value={roomId} onChange={chooseRoom} />
           <Transport engine={engine} onReset={reset} />
           <p className="app__hint">Headphones recommended. Drag the room to look around.</p>
         </>

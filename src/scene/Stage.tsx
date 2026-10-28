@@ -3,6 +3,7 @@ import { Canvas, useThree } from '@react-three/fiber';
 import { useCallback, useEffect, useState } from 'react';
 import { PerspectiveCamera, Vector3 } from 'three';
 import type { AudioEngine } from '../audio/engine';
+import type { Room as RoomPreset } from '../rooms';
 import { STAGE, STEMS, type StagePosition, type StemId } from '../stems';
 import { Instrument } from './Instrument';
 import { LabelTracker, useLabelRegistry } from './labels';
@@ -11,6 +12,7 @@ import { Room } from './Room';
 type Props = {
   engine: AudioEngine;
   positions: Record<StemId, StagePosition>;
+  room: RoomPreset;
   onMove: (id: StemId, position: StagePosition) => void;
 };
 
@@ -34,7 +36,7 @@ function ResponsiveFov() {
   return null;
 }
 
-export function Stage({ engine, positions, onMove }: Props) {
+export function Stage({ engine, positions, room, onMove }: Props) {
   const [dragging, setDragging] = useState(false);
   const [active, setActive] = useState<StemId | null>(null);
   const labels = useLabelRegistry();
@@ -69,10 +71,7 @@ export function Stage({ engine, positions, onMove }: Props) {
           castShadow
           shadow-mapSize={[1024, 1024]}
         />
-        <pointLight position={[-6, 4, -2]} intensity={12} color="#ffb070" />
-        <pointLight position={[6, 4, -2]} intensity={12} color="#70a0ff" />
-
-        <Room />
+        <Room key={room.id} room={room} />
         {STEMS.map((stem) => (
           <Instrument
             key={stem.id}

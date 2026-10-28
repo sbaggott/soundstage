@@ -1,15 +1,20 @@
+import { DEFAULT_ROOM, type Room } from '../rooms';
 import { STAGE, type StagePosition, type Stem, type StemId } from '../stems';
-import { createImpulseResponse, STUDIO, type Room } from './impulse';
+import { createImpulseResponse } from './impulse';
 
 // Signal path per stem:
 //
 //   source → mono → panner (HRTF + distance) ──────────────→ master
-//              ├──→ send (more as it moves back) → reverb ──→ master
+//              ├──→ send (more as it moves back) → reverb bus → room ──→ master
 //              └──→ analyser (level for the visuals)
 //
 // The panner gives direction and makes far instruments quieter. The send makes them
 // wetter, so the balance of direct sound to room sound changes the way it does in a
 // real space. Volume alone sounds like a fader; this sounds like distance.
+//
+// "room" is a convolver, a lowpass and a return gain. Changing rooms builds a new one and
+// crossfades the returns, so the old tail fades out under the new room instead of
+// cutting off with a click.
 
 type Channel = {
   stem: Stem;
@@ -19,9 +24,13 @@ type Channel = {
   send: GainNode;
   analyser: AnalyserNode;
   source: AudioBufferSourceNode | null;
+  position: StagePosition;
 };
 
+type RoomChain = { convolver: ConvolverNode; damping: BiquadFilterNode; out: GainNode };
+
 const SMOOTHING = 0.03;
+const ROOM_FADE = 0.35;
 const NEAR = STAGE.listenerZ - STAGE.maxZ;
 const FAR = Math.hypot(STAGE.maxX, STAGE.listenerZ - STAGE.minZ);
 
@@ -30,9 +39,10 @@ export class AudioEngine {
   readonly duration: number;
   private readonly channels = new Map<StemId, Channel>();
   private readonly master: GainNode;
-  private readonly reverb: ConvolverNode;
+  private readonly reverbBus: GainNode;
+  private roomChain: RoomChain;
   private readonly levelData = new Float32Array(256);
-  private room: Room = STUDIO;
+  private room: Room = DEFAULT_ROOM;
   private playing = false;
   // While playing: the context time at which song position 0 would have played.
   private startedAt = 0;
@@ -51,12 +61,9 @@ export class AudioEngine {
     limiter.ratio.value = 12;
     this.master.connect(limiter).connect(ctx.destination);
 
-    this.reverb = ctx.createConvolver();
-    const damping = ctx.createBiquadFilter();
-    damping.type = 'lowpass';
-    damping.frequency.value = this.room.damping;
-    this.reverb.buffer = createImpulseResponse(ctx, this.room);
-    this.reverb.connect(damping).connect(this.master);
+    this.reverbBus = ctx.createGain();
+    this.roomChain = this.buildRoom(this.room);
+    this.roomChain.out.gain.value = 1;
 
     this.placeListener();
 
@@ -79,10 +86,19 @@ export class AudioEngine {
       analyser.fftSize = this.levelData.length;
 
       mono.connect(panner).connect(this.master);
-      mono.connect(send).connect(this.reverb);
+      mono.connect(send).connect(this.reverbBus);
       mono.connect(analyser);
 
-      const channel: Channel = { stem, buffer: buffers[i], mono, panner, send, analyser, source: null };
+      const channel: Channel = {
+        stem,
+        buffer: buffers[i],
+        mono,
+        panner,
+        send,
+        analyser,
+        source: null,
+        position: stem.home,
+      };
       this.channels.set(stem.id, channel);
       this.setPosition(stem.id, stem.home, true);
     });
@@ -143,14 +159,42 @@ export class AudioEngine {
     return () => this.endedListeners.delete(listener);
   }
 
-  setPosition(id: StemId, { x, z }: StagePosition, immediate = false) {
+  get roomId() {
+    return this.room.id;
+  }
+
+  setRoom(room: Room) {
+    if (room.id === this.room.id) return;
+    const now = this.ctx.currentTime;
+    const previous = this.roomChain;
+    const next = this.buildRoom(room);
+
+    previous.out.gain.cancelScheduledValues(now);
+    previous.out.gain.setValueAtTime(previous.out.gain.value, now);
+    previous.out.gain.linearRampToValueAtTime(0, now + ROOM_FADE);
+    next.out.gain.setValueAtTime(0, now);
+    next.out.gain.linearRampToValueAtTime(1, now + ROOM_FADE);
+    window.setTimeout(() => {
+      this.reverbBus.disconnect(previous.convolver);
+      previous.out.disconnect();
+    }, (ROOM_FADE + 0.1) * 1000);
+
+    this.roomChain = next;
+    this.room = room;
+    // Each room has its own wetness, so every stem's send has to be recalculated.
+    for (const channel of this.channels.values()) this.setPosition(channel.stem.id, channel.position);
+  }
+
+  setPosition(id: StemId, position: StagePosition, immediate = false) {
     const channel = this.channels.get(id);
     if (!channel) return;
+    channel.position = position;
+    const { x, z } = position;
     const { panner, send } = channel;
     const now = this.ctx.currentTime;
     const distance = Math.hypot(x, STAGE.listenerZ - z);
     const depth = Math.min(1, Math.max(0, (distance - NEAR) / (FAR - NEAR)));
-    const wet = this.room.wet * (0.6 + 0.8 * depth);
+    const wet = this.room.reverb.wet * (0.6 + 0.8 * depth);
 
     if (immediate) {
       panner.positionX.value = x;
@@ -179,6 +223,18 @@ export class AudioEngine {
     this.stopSources();
     this.endedListeners.clear();
     void this.ctx.close();
+  }
+
+  private buildRoom(room: Room): RoomChain {
+    const convolver = this.ctx.createConvolver();
+    convolver.buffer = createImpulseResponse(this.ctx, room.reverb);
+    const damping = this.ctx.createBiquadFilter();
+    damping.type = 'lowpass';
+    damping.frequency.value = room.reverb.damping;
+    const out = this.ctx.createGain();
+    out.gain.value = 0;
+    this.reverbBus.connect(convolver).connect(damping).connect(out).connect(this.master);
+    return { convolver, damping, out };
   }
 
   private start(offset: number) {
