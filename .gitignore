@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.DS_Store
+.env*
+!.env.example
+# Mood references from other sites. Not ours to publish.
+reference/
+.idea
+
+.idea/
+# Placeholder stems from someone else's song. Local only.
+public/audio/
