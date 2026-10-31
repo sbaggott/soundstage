@@ -254,6 +254,78 @@ body {
   color: var(--text-muted);
 }
 
+.rooms__mix {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  user-select: none;
+}
+
+.rooms__mix-label {
+  margin-right: auto;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.rooms__mix-value {
+  min-width: 5ch;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.knob {
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border-radius: 50%;
+  cursor: ns-resize;
+  touch-action: none;
+}
+
+.knob:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.knob svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.knob__track,
+.knob__value {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.knob__track {
+  stroke: var(--border);
+}
+
+.knob__value {
+  stroke: var(--accent);
+}
+
+.knob__cap {
+  fill: #2a1f18;
+  stroke: var(--border);
+}
+
+.knob__pointer {
+  stroke: var(--text);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+
 @media (max-width: 760px) {
   .rooms {
     top: auto;

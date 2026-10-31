@@ -4,8 +4,8 @@ import { createImpulseResponse } from './impulse';
 
 // Signal path per stem:
 //
-//   source → mono → panner (HRTF + distance) ──────────────→ master
-//              ├──→ send (more as it moves back) → reverb bus → room ──→ master
+//   source → mono → panner (HRTF + distance) ─────────────────────────→ dry ─→ master
+//              ├──→ send (more as it moves back) → reverb bus → room → wet ─→ master
 //              └──→ analyser (level for the visuals)
 //
 // The panner gives direction and makes far instruments quieter. The send makes them
@@ -17,6 +17,9 @@ import { createImpulseResponse } from './impulse';
 // cutting off with a click.
 //
 // A room with a recorded impulse response uses it in place of the synthetic one.
+//
+// "dry" and "wet" are the listener's mix knob. They sit outside the rooms, so the setting
+// carries over when the room changes.
 
 type Channel = {
   stem: Stem;
@@ -42,6 +45,9 @@ export class AudioEngine {
   private readonly channels = new Map<StemId, Channel>();
   private readonly master: GainNode;
   private readonly reverbBus: GainNode;
+  private readonly dry: GainNode;
+  private readonly wet: GainNode;
+  private mixAmount = 0.5;
   private roomChain: RoomChain;
   private readonly levelData = new Float32Array(256);
   private room: Room = DEFAULT_ROOM;
@@ -70,6 +76,11 @@ export class AudioEngine {
     limiter.ratio.value = 12;
     this.master.connect(limiter).connect(ctx.destination);
 
+    this.dry = ctx.createGain();
+    this.dry.connect(this.master);
+    this.wet = ctx.createGain();
+    this.wet.connect(this.master);
+
     this.reverbBus = ctx.createGain();
     this.roomChain = this.buildRoom(this.room);
     this.roomChain.out.gain.value = 1;
@@ -94,7 +105,7 @@ export class AudioEngine {
       const analyser = ctx.createAnalyser();
       analyser.fftSize = this.levelData.length;
 
-      mono.connect(panner).connect(this.master);
+      mono.connect(panner).connect(this.dry);
       mono.connect(send).connect(this.reverbBus);
       mono.connect(analyser);
 
@@ -194,6 +205,19 @@ export class AudioEngine {
     for (const channel of this.channels.values()) this.setPosition(channel.stem.id, channel.position);
   }
 
+  get mix() {
+    return this.mixAmount;
+  }
+
+  // 0 is dry only, 1 is reverb only. The middle leaves both at full level, which is each
+  // room's own balance; turning toward one end fades the other side out.
+  setMix(amount: number) {
+    this.mixAmount = Math.min(1, Math.max(0, amount));
+    const now = this.ctx.currentTime;
+    this.dry.gain.setTargetAtTime(Math.min(1, 2 * (1 - this.mixAmount)), now, SMOOTHING);
+    this.wet.gain.setTargetAtTime(Math.min(1, 2 * this.mixAmount), now, SMOOTHING);
+  }
+
   setPosition(id: StemId, position: StagePosition, immediate = false) {
     const channel = this.channels.get(id);
     if (!channel) return;
@@ -248,7 +272,7 @@ export class AudioEngine {
       damping.frequency.value = room.reverb.damping;
       convolver.connect(damping).connect(out);
     }
-    out.connect(this.master);
+    out.connect(this.wet);
     return { convolver, out };
   }
 

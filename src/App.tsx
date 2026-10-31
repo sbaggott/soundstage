@@ -17,6 +17,7 @@ export function App() {
   const [error, setError] = useState<string | null>(null);
   const [positions, setPositions] = useState<Positions>(homePositions);
   const [roomId, setRoomId] = useState<RoomId>(DEFAULT_ROOM.id);
+  const [mix, setMix] = useState(0.5);
   const room = getRoom(roomId);
 
   useEffect(() => {
@@ -51,6 +52,11 @@ export function App() {
     setRoomId(id);
   }
 
+  function chooseMix(next: number) {
+    engine?.setMix(next);
+    setMix(next);
+  }
+
   function reset() {
     const home = homePositions();
     for (const stem of STEMS) engine?.setPosition(stem.id, home[stem.id]);
@@ -69,7 +75,7 @@ export function App() {
           <div className="app__stage">
             <Stage engine={engine} positions={positions} room={room} onMove={move} />
           </div>
-          <RoomPicker value={roomId} onChange={chooseRoom} />
+          <RoomPicker value={roomId} onChange={chooseRoom} mix={mix} onMixChange={chooseMix} />
           <Transport engine={engine} onReset={reset} />
           <p className="app__hint">Headphones recommended. Drag the room to look around.</p>
         </>

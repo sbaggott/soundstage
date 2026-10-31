@@ -44,6 +44,11 @@ left, vocal up front") and the instruments move themselves.
   generated from room size and wall material). No licensing questions, and parameters an AI
   can change ("make the room bigger"). Recorded IRs later, from a library with a clear
   license.
+- **Reverb mix knob** (under the room picker): one setting for every room, kept when the
+  room changes. 0% is dry only, 100% is reverb only. 50% (the default, and a
+  double-click on the knob) leaves both at full level, which is each room's own balance;
+  turning toward one end fades the other side out (dry = min(1, 2 - 2m), wet = min(1, 2m)).
+  Drag up and down, or arrow keys, Home and End.
 - **Rooms are built in 3D** (brick, wood, diffusers), not photo backdrops. The images in
   `reference/backgrounds/` are mood references from other sites; they're gitignored and
   never shipped.
