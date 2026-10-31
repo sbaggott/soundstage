@@ -13,6 +13,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { NodeIO } from '@gltf-transform/core';
+import { ALL_EXTENSIONS, KHRMaterialsPBRSpecularGlossiness } from '@gltf-transform/extensions';
 import { prune } from '@gltf-transform/functions';
 
 const SOURCE = 'reference/models';
@@ -50,17 +51,40 @@ function prepareDrums(document) {
   }
 }
 
+// The mic uses the old specular-glossiness materials, which three.js no longer reads: it
+// would render every part as white chrome. Swap in plain metal-roughness finishes.
+function prepareMicrophone(document) {
+  const finishes = {
+    Material: { color: [0.02, 0.02, 0.02, 1], metallic: 0, roughness: 0.5 }, // stand and body, black paint
+    metal: { color: [0.25, 0.25, 0.26, 1], metallic: 1, roughness: 0.4 }, // clamps, gunmetal
+    microphone_grid: { color: [0.8, 0.8, 0.82, 1], metallic: 1, roughness: 0.3 }, // grille, satin silver
+    metal_2: { color: [0.9, 0.9, 0.92, 1], metallic: 1, roughness: 0.15 }, // gear, chrome
+    black_resine: { color: [0.02, 0.02, 0.03, 1], metallic: 0, roughness: 0.6 }, // cable
+    hole__0: { color: [0.01, 0.01, 0.01, 1], metallic: 0, roughness: 0.9 },
+  };
+  for (const material of document.getRoot().listMaterials()) {
+    const finish = finishes[material.getName()];
+    if (!finish) continue;
+    material
+      .setBaseColorFactor(finish.color)
+      .setMetallicFactor(finish.metallic)
+      .setRoughnessFactor(finish.roughness);
+  }
+  document.createExtension(KHRMaterialsPBRSpecularGlossiness).dispose();
+}
+
 const MODELS = {
   drum_kit: { prepare: prepareDrums },
   electric_bass: {},
   fender_stratocaster_guitar_blue: {},
+  microphone: { prepare: prepareMicrophone },
   piano: {},
   saxophone: {},
   trumpet: {},
   violin: {},
 };
 
-const io = new NodeIO();
+const io = new NodeIO().registerExtensions(ALL_EXTENSIONS);
 const scratch = mkdtempSync(join(tmpdir(), 'soundstage-models-'));
 const names = process.argv.slice(2);
 

@@ -105,7 +105,16 @@ export const STEMS: Stem[] = [
     models: [{ url: `${models}/violin.glb`, size: 0.9, rotation: [Math.PI / 2, 0, 0] }],
     footprint: 0.45,
   },
-  { id: 'vox', label: 'Vocal', url: `${base}/vox.mp3`, color: '#f4f1de', home: { x: 0, z: -0.6 } },
+  {
+    id: 'vox',
+    label: 'Vocal',
+    url: `${base}/vox.mp3`,
+    color: '#f4f1de',
+    home: { x: 0, z: -0.6 },
+    // A mic on a straight stand, turned so the grille faces the singer (upstage).
+    models: [{ url: `${models}/microphone.glb`, size: 1.7, rotation: [0, Math.PI, 0] }],
+    footprint: 0.4,
+  },
 ];
 
 export function clampToStage({ x, z }: StagePosition): StagePosition {

@@ -102,7 +102,6 @@ left, vocal up front") and the instruments move themselves.
 - 18 MB of 320 kbps MP3 on first load. Re-encode smaller (ffmpeg is installed) before
   deploying; 128 to 160 kbps is plenty for a demo.
 - Production JS bundle is about 1.2 MB (three.js). Fine for now; could code-split later.
-- Instruments are colored cylinders. Real shapes or icons later.
 - Tune by ear: room size, wet levels, distance rolloff.
 
 ## Ideas from Sage (original notes)
@@ -149,6 +148,12 @@ left, vocal up front") and the instruments move themselves.
   - `violin.glb`: "Violin" by Voldepreuss,
     https://sketchfab.com/3d-models/violin-0162dea1b1044cd281c57af5e5fc2046, CC BY 4.0.
     (Replaced a CC BY-NC violin on 2026-10-30.)
+  - `microphone.glb` (on a straight stand, for the vocal): "microphone" by ssmilerok,
+    https://sketchfab.com/3d-models/microphone-545b82406abf465cb0fd91a4be42ac05, CC BY 4.0.
+    It uses specular-glossiness materials, which three.js no longer reads (every part came
+    out white chrome), so `prepareMicrophone` sets metal-roughness finishes by hand: black
+    stand and body, satin silver grille, chrome and gunmetal hardware. 640 KB to 55 KB.
+    Shown 1.7 m tall, turned so the grille points upstage at the singer.
   - All six: meshopt geometry, WebP textures at 1024 px; 22 MB to 1.1 MB together.
   - Shown larger than life so they read next to the drums: violin and sax 1.5x, trumpet 1.2x.
   - Models are sized true to life by their longest side (`size` in `src/stems.ts`), after a
