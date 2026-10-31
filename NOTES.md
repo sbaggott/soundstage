@@ -85,9 +85,9 @@ left, vocal up front") and the instruments move themselves.
 
 | Room | Look | Reverb (tail, pre-delay, lowpass, wet) |
 |---|---|---|
-| Studio | wood walls and floor, quadratic residue diffusers (n² mod 7) | 1.4 s, 10 ms, 6.5 kHz, 0.30 |
-| Brick club | brick, concrete floor | 1.2 s, 6 ms, 10 kHz, 0.40 |
-| Concert hall | 14 m plaster walls, columns, much wider and deeper | 3.2 s, 35 ms, 5 kHz, 0.42 |
+| Studio | wood walls and floor, quadratic residue diffusers (n² mod 7) | recorded (Sound Room A, 1.2 s), no lowpass (was 6.5 kHz), 0.30; synthetic fallback 1.4 s, 10 ms |
+| Brick club | brick, concrete floor | recorded (Cement Blocks, 1.5 s), 10 kHz, 0.40; synthetic fallback 1.2 s, 6 ms |
+| Concert hall | 14 m plaster walls, columns, much wider and deeper | recorded (La Scala, 2.0 s), 5 kHz, 0.42; synthetic fallback 3.2 s, 35 ms |
 | Dead room | acoustic foam | 0.4 s, 2 ms, 3.5 kHz, 0.12 |
 
 - Presets live in `src/rooms.ts` (sound and look together), textures are drawn on a canvas
@@ -118,6 +118,42 @@ left, vocal up front") and the instruments move themselves.
   into that folder to run it.
   320 kbps MP3, 44.1 kHz stereo. Lengths vary from 56.4 s to 60.9 s.
 - `reference/backgrounds/`: mood images, not for publishing.
+- `public/reverbs/` (committed; all three licenses confirmed 2026-10-31): recorded impulse
+  responses. A room with `reverb.recording` set in `src/rooms.ts` uses it instead of the
+  synthetic tail; damping and wet still apply. A missing file falls back to synthetic.
+  Chosen by ear over the synthetic Studio reverb (2026-10-31): A/B'd at double wet (0.6),
+  the synthetic tail hissed on instruments at the back of the room and the recording
+  didn't.
+  - **Voxengo files** (`cement-blocks.wav`, `scala-milan-opera-hall.wav`): from Voxengo's
+    free impulse pack (made with Voxengo Impulse Modeler), copyright Aleksey Vaneev. Free
+    to use for any purpose, including commercial. Redistributing them, which a public
+    repo or a deployed site does, is allowed only if the files stay complete and unaltered
+    (no trimming, fades or conversion), the license text travels with them, and nothing
+    is charged. So they're served exactly as downloaded, with the full terms in
+    `public/reverbs/voxengo-license.txt` next to them. Credit Voxengo on the page and in
+    the README.
+    - `cement-blocks.wav` (Brick club): stereo, 44.1 kHz 16-bit, 1.5 s. Replaced
+      "1.8s_Stonewall Room" (a Logic Space Designer .SDIR), which didn't work out, and
+      then a 2.2 s "Cement Blocks 2".
+    - `scala-milan-opera-hall.wav` (Concert hall): stereo, 44.1 kHz 16-bit, 2.0 s,
+      starts on the sound and fades to silence. Replaced Musikvereinsaal (3.0 s) and,
+      before that, "02.6s Hansa Studio-OST" (AIFF-C, 2.6 s).
+  - `sound-room-a.wav` (Studio): from "Sound Room A Full Distance Indirect" L and R
+    (`reference/reverbs/`, 48 kHz 24-bit mono, 43.7 s each, almost all silence), by Cian
+    Riordan, copyright 2021. BSD-style license: free to use, share and modify, no
+    reselling. Any copy we distribute must carry the copyright notice, conditions and
+    disclaimer, which are in `public/reverbs/sound-room-a-license.txt`. Credit him by
+    name, but don't use his name, Barefoot Recording or Eric Valentine to endorse or
+    promote Soundstage ("reverb: Sound Room A by Cian Riordan" is fine; "sounds like
+    Barefoot" is not). Joined to stereo, trimmed to start 1 ms before the
+    sound arrives (0.049 s), cut to 1.2 s with a 0.3 s fade where it reaches the noise
+    floor (about -75 dB at 1 s):
+
+    ```
+    ffmpeg -i "Sound Room A Full Distance Indirect.L.wav" -i "Sound Room A Full Distance Indirect.R.wav" \
+      -filter_complex "[0:a][1:a]join=inputs=2:channel_layout=stereo,atrim=start=0.049:duration=1.2,asetpts=PTS-STARTPTS,afade=t=out:st=0.9:d=0.3" \
+      -c:a pcm_s24le public/reverbs/sound-room-a.wav
+    ```
 - `public/3d/` (gitignored until we decide to publish models): instrument models as GLB.
   Originals go in `reference/models/<name>.original.glb`, untouched. `npm run models`
   (`scripts/models.mjs`) rebuilds `public/3d/` from them: per-model fixes, then

@@ -1,4 +1,4 @@
-import { DEFAULT_ROOM, type Room } from '../rooms';
+import { DEFAULT_ROOM, ROOMS, type Room, type RoomId } from '../rooms';
 import { STAGE, type StagePosition, type Stem, type StemId } from '../stems';
 import { createImpulseResponse } from './impulse';
 
@@ -15,6 +15,8 @@ import { createImpulseResponse } from './impulse';
 // "room" is a convolver, a lowpass and a return gain. Changing rooms builds a new one and
 // crossfades the returns, so the old tail fades out under the new room instead of
 // cutting off with a click.
+//
+// A room with a recorded impulse response uses it in place of the synthetic one.
 
 type Channel = {
   stem: Stem;
@@ -27,7 +29,7 @@ type Channel = {
   position: StagePosition;
 };
 
-type RoomChain = { convolver: ConvolverNode; damping: BiquadFilterNode; out: GainNode };
+type RoomChain = { convolver: ConvolverNode; out: GainNode };
 
 const SMOOTHING = 0.03;
 const ROOM_FADE = 0.35;
@@ -43,6 +45,7 @@ export class AudioEngine {
   private roomChain: RoomChain;
   private readonly levelData = new Float32Array(256);
   private room: Room = DEFAULT_ROOM;
+  private readonly recordings: Map<RoomId, AudioBuffer>;
   private playing = false;
   // While playing: the context time at which song position 0 would have played.
   private startedAt = 0;
@@ -52,8 +55,14 @@ export class AudioEngine {
   private generation = 0;
   private endedListeners = new Set<() => void>();
 
-  private constructor(stems: Stem[], buffers: AudioBuffer[], ctx: AudioContext) {
+  private constructor(
+    stems: Stem[],
+    buffers: AudioBuffer[],
+    recordings: Map<RoomId, AudioBuffer>,
+    ctx: AudioContext,
+  ) {
     this.ctx = ctx;
+    this.recordings = recordings;
     this.master = ctx.createGain();
     this.master.gain.value = 0.8;
     const limiter = ctx.createDynamicsCompressor();
@@ -119,7 +128,7 @@ export class AudioEngine {
         return buffer;
       }),
     );
-    return new AudioEngine(stems, buffers, ctx);
+    return new AudioEngine(stems, buffers, await loadRecordings(ctx), ctx);
   }
 
   get isPlaying() {
@@ -227,14 +236,20 @@ export class AudioEngine {
 
   private buildRoom(room: Room): RoomChain {
     const convolver = this.ctx.createConvolver();
-    convolver.buffer = createImpulseResponse(this.ctx, room.reverb);
-    const damping = this.ctx.createBiquadFilter();
-    damping.type = 'lowpass';
-    damping.frequency.value = room.reverb.damping;
+    convolver.buffer = this.recordings.get(room.id) ?? createImpulseResponse(this.ctx, room.reverb);
     const out = this.ctx.createGain();
     out.gain.value = 0;
-    this.reverbBus.connect(convolver).connect(damping).connect(out).connect(this.master);
-    return { convolver, damping, out };
+    this.reverbBus.connect(convolver);
+    if (room.reverb.damping === undefined) {
+      convolver.connect(out);
+    } else {
+      const damping = this.ctx.createBiquadFilter();
+      damping.type = 'lowpass';
+      damping.frequency.value = room.reverb.damping;
+      convolver.connect(damping).connect(out);
+    }
+    out.connect(this.master);
+    return { convolver, out };
   }
 
   private start(offset: number) {
@@ -293,4 +308,23 @@ export class AudioEngine {
       listener.setOrientation(0, 0, -1, 0, 1, 0);
     }
   }
+}
+
+// Recorded impulse responses are local only until each license is confirmed, so a fresh
+// clone won't have them. A room whose file is missing keeps its synthetic reverb.
+async function loadRecordings(ctx: BaseAudioContext) {
+  const recordings = new Map<RoomId, AudioBuffer>();
+  await Promise.all(
+    ROOMS.map(async (room) => {
+      if (!room.reverb.recording) return;
+      try {
+        const res = await fetch(room.reverb.recording);
+        if (!res.ok) return;
+        recordings.set(room.id, await ctx.decodeAudioData(await res.arrayBuffer()));
+      } catch {
+        // Missing or unreadable: fall back to synthetic.
+      }
+    }),
+  );
+  return recordings;
 }
