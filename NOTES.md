@@ -119,6 +119,41 @@ left, vocal up front") and the instruments move themselves.
   into that folder to run it.
   320 kbps MP3, 44.1 kHz stereo. Lengths vary from 56.4 s to 60.9 s.
 - `reference/backgrounds/`: mood images, not for publishing.
+- `public/3d/` (gitignored until we decide to publish models): instrument models as GLB.
+  Originals go in `reference/models/<name>.original.glb`, untouched. `npm run models`
+  (`scripts/models.mjs`) rebuilds `public/3d/` from them: per-model fixes, then
+  `gltf-transform optimize` with meshopt geometry and WebP textures (the meshopt decoder
+  ships with drei's `useGLTF`). Add a new model to the `MODELS` list there.
+  A stem with no model, or whose file is missing, shows the colored cylinder instead.
+  - `drum_kit.glb`: "Drum Kit" by art.katja,
+    https://sketchfab.com/3d-models/drum-kit-898f2f4ba1704abe9c784066e2b0f751, CC BY 4.0
+    (credit required on the page and in the README). Removed the floor mat and a spare
+    cymbal lying on it; 5.2 MB to 604 KB. Shown 2 m wide. Materials changed before
+    compressing: "Metal" (stands, hoops, lugs) is chrome (base 0.95, metallic 1, roughness
+    0.08); the cymbals (nodes Circle.003/.005/.006/.007_Metal_0) get their own "Cymbal"
+    bronze (base 0.6/0.32/0.1, metallic 1, roughness 0.34). The original file shares one
+    flat grey material across both, so this has to happen before `optimize` joins meshes.
+    All of it lives in `prepareDrums` in `scripts/models.mjs`.
+  - `electric_bass.glb`: "Electric bass" by Nixak,
+    https://sketchfab.com/3d-models/electric-bass-c5927d3f189c4e2595078020ba84d305, CC BY 4.0.
+  - `fender_stratocaster_guitar_blue.glb`: "Fender Stratocaster Guitar Blue" by
+    YieldingMist206,
+    https://sketchfab.com/3d-models/fender-stratocaster-guitar-blue-96a79610434f43b2ac2a09a636afc5d4,
+    CC BY 4.0.
+  - `piano.glb` (a stage keyboard on an X stand): "Black_paino" by meshplalette66,
+    https://sketchfab.com/3d-models/black-paino-3d64ece48827490e8fd4321f9050d8f0, CC BY 4.0.
+  - `saxophone.glb`: "Saxophone" by Matt Caddie,
+    https://sketchfab.com/3d-models/saxophone-f72747715883480b9555a75558b3e9cd, CC BY 4.0.
+  - `trumpet.glb`: "Trumpet" by Kagelok,
+    https://sketchfab.com/3d-models/trumpet-1dc9efd37bf14d1b9d1e3de0ca90435c, CC BY 4.0.
+  - `violin.glb`: "Violin" by Voldepreuss,
+    https://sketchfab.com/3d-models/violin-0162dea1b1044cd281c57af5e5fc2046, CC BY 4.0.
+    (Replaced a CC BY-NC violin on 2026-10-30.)
+  - All six: meshopt geometry, WebP textures at 1024 px; 22 MB to 1.1 MB together.
+  - Shown larger than life so they read next to the drums: violin and sax 1.5x, trumpet 1.2x.
+  - Models are sized true to life by their longest side (`size` in `src/stems.ts`), after a
+    rotation stands them upright. Model materials get a studio environment map generated in
+    code (`RoomEnvironment`); without it, anything metallic renders black.
 
 ## Open questions
 

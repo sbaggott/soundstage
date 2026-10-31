@@ -1,9 +1,10 @@
 import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
-import { useEffect, useRef, useState, type RefObject } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import { Group, Mesh, MeshStandardMaterial, Plane, Raycaster, Vector2, Vector3 } from 'three';
 import type { AudioEngine } from '../audio/engine';
 import { clampToStage, type StagePosition, type Stem } from '../stems';
 import type { LabelRegistry } from './labels';
+import { Model, ModelBoundary } from './Model';
 
 type Props = {
   stem: Stem;
@@ -29,16 +30,34 @@ export function Instrument({ stem, position, engine, onDragChange, onMove, onAct
   const raycaster = useRef(new Raycaster());
   const { camera, gl } = useThree();
   const live = useRef<StagePosition>(position);
+  // Label height above the floor; a loaded model replaces this with its own height.
+  const lift = useRef(1.15);
+  const tallest = useRef(0);
   const [dragging, setDragging] = useState(false);
   const [hovered, setHovered] = useState(false);
 
   useEffect(() => {
     const anchors = labels.current.anchors;
-    if (group.current) anchors.set(stem.id, { object: group.current, lift: 1.15 });
+    if (group.current) anchors.set(stem.id, { object: group.current, lift: lift.current });
     return () => {
       anchors.delete(stem.id);
     };
   }, [labels, stem.id]);
+
+  // Put the label just above whatever the instrument turns out to be.
+  const onMeasure = useCallback(
+    (height: number) => {
+      const anchor = labels.current.anchors.get(stem.id);
+      tallest.current = Math.max(tallest.current, height);
+      lift.current = tallest.current + 0.35;
+      if (anchor) anchor.lift = lift.current;
+    },
+    [labels, stem.id],
+  );
+
+  // The level ring sits around the models' footprint and pulses less, since it's bigger.
+  const ringBase = (stem.footprint ?? 0.62) / 0.62;
+  const pulse = stem.models ? 0.25 : 0.9;
 
   const active = hovered || dragging;
   useEffect(() => onActiveChange(stem.id, active), [stem.id, active, onActiveChange]);
@@ -57,7 +76,7 @@ export function Instrument({ stem, position, engine, onDragChange, onMove, onAct
     const rate = target > level.current ? 30 : 6;
     level.current += (target - level.current) * Math.min(1, delta * rate);
     if (body.current) body.current.emissiveIntensity = 0.08 + level.current * 1.6;
-    if (ring.current) ring.current.scale.setScalar(1 + level.current * 0.9);
+    if (ring.current) ring.current.scale.setScalar(1 + level.current * pulse);
   });
 
   // The drag listens on the window, not the mesh: once the instrument hits the edge of
@@ -104,11 +123,22 @@ export function Instrument({ stem, position, engine, onDragChange, onMove, onAct
     window.addEventListener('pointercancel', end);
   }
 
+  const placeholder = (
+    <mesh position={[0, 0.35, 0]} castShadow>
+      <cylinderGeometry args={[0.45, 0.5, 0.7, 40]} />
+      <meshStandardMaterial
+        ref={body}
+        color={stem.color}
+        emissive={stem.color}
+        emissiveIntensity={0.08}
+        roughness={0.45}
+      />
+    </mesh>
+  );
+
   return (
     <group ref={group} position={[position.x, 0, position.z]}>
-      <mesh
-        position={[0, 0.35, 0]}
-        castShadow
+      <group
         onPointerDown={onPointerDown}
         onPointerOver={(e) => {
           e.stopPropagation();
@@ -116,20 +146,25 @@ export function Instrument({ stem, position, engine, onDragChange, onMove, onAct
         }}
         onPointerOut={() => setHovered(false)}
       >
-        <cylinderGeometry args={[0.45, 0.5, 0.7, 40]} />
-        <meshStandardMaterial
-          ref={body}
-          color={stem.color}
-          emissive={stem.color}
-          emissiveIntensity={0.08}
-          roughness={0.45}
-        />
-      </mesh>
+        {stem.models ? (
+          <ModelBoundary fallback={placeholder}>
+            <Suspense fallback={placeholder}>
+              {stem.models.map((part) => (
+                <Model key={part.url} part={part} onMeasure={onMeasure} />
+              ))}
+            </Suspense>
+          </ModelBoundary>
+        ) : (
+          placeholder
+        )}
+      </group>
 
-      <mesh ref={ring} rotation-x={-Math.PI / 2} position={[0, 0.01, 0]}>
-        <ringGeometry args={[0.58, 0.66, 48]} />
-        <meshBasicMaterial color={stem.color} transparent opacity={0.55} />
-      </mesh>
+      <group scale={ringBase}>
+        <mesh ref={ring} rotation-x={-Math.PI / 2} position={[0, 0.01, 0]}>
+          <ringGeometry args={[0.58, 0.66, 48]} />
+          <meshBasicMaterial color={stem.color} transparent opacity={0.55} />
+        </mesh>
+      </group>
     </group>
   );
 }
