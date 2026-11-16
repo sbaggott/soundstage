@@ -1,13 +1,13 @@
 import { OrbitControls } from '@react-three/drei';
-import { Canvas, useThree } from '@react-three/fiber';
-import { useCallback, useEffect, useState } from 'react';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { type ComponentRef, useCallback, useEffect, useRef, useState } from 'react';
 import { PerspectiveCamera, Vector3 } from 'three';
 import type { AudioEngine } from '../audio/engine';
 import type { Room as RoomPreset } from '../rooms';
 import { STAGE, STEMS, type StagePosition, type StemId } from '../stems';
 import { Instrument } from './Instrument';
 import { LabelTracker, useLabelRegistry } from './labels';
-import { Room } from './Room';
+import { Room, roomWidth } from './Room';
 
 type Props = {
   engine: AudioEngine;
@@ -34,6 +34,41 @@ function ResponsiveFov() {
   }, [camera, aspect]);
 
   return null;
+}
+
+const MAX_AZIMUTH = Math.PI / 3;
+// How close the camera may get to a side wall, in meters.
+const WALL_GAP = 0.5;
+
+// Look around, but stay in the room and above the floor. The side-to-side limit tightens
+// as the camera pulls back, so it never swings out past a side wall.
+function CameraControls({ room, enabled }: { room: RoomPreset; enabled: boolean }) {
+  const controls = useRef<ComponentRef<typeof OrbitControls>>(null);
+  const halfWidth = roomWidth(room) / 2 - WALL_GAP;
+
+  useFrame(({ camera }) => {
+    const c = controls.current;
+    if (!c) return;
+    const offset = camera.position.clone().sub(c.target);
+    const reach = Math.hypot(offset.x, offset.z);
+    const azimuth = reach > halfWidth ? Math.min(MAX_AZIMUTH, Math.asin(halfWidth / reach)) : MAX_AZIMUTH;
+    c.minAzimuthAngle = -azimuth;
+    c.maxAzimuthAngle = azimuth;
+  });
+
+  return (
+    <OrbitControls
+      ref={controls}
+      enabled={enabled}
+      enablePan={false}
+      target={[0, 0, -1]}
+      minDistance={5}
+      maxDistance={16}
+      maxPolarAngle={Math.PI / 2.2}
+      minAzimuthAngle={-MAX_AZIMUTH}
+      maxAzimuthAngle={MAX_AZIMUTH}
+    />
+  );
 }
 
 export function Stage({ engine, positions, room, onMove }: Props) {
@@ -87,17 +122,7 @@ export function Stage({ engine, positions, room, onMove }: Props) {
         <LabelTracker registry={labels} />
         <ResponsiveFov />
 
-        {/* Look around, but stay in the room and above the floor. */}
-        <OrbitControls
-          enabled={!dragging}
-          enablePan={false}
-          target={[0, 0, -1]}
-          minDistance={5}
-          maxDistance={16}
-          maxPolarAngle={Math.PI / 2.2}
-          minAzimuthAngle={-Math.PI / 3}
-          maxAzimuthAngle={Math.PI / 3}
-        />
+        <CameraControls room={room} enabled={!dragging} />
       </Canvas>
 
       <div className="labels" aria-hidden="true">

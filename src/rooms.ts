@@ -1,6 +1,15 @@
 export type RoomId = 'studio' | 'club' | 'hall' | 'dead';
 
-export type Surface = 'wood' | 'brick' | 'plaster' | 'foam' | 'concrete';
+export type Surface =
+  | 'wood'
+  | 'parquet'
+  | 'brick'
+  | 'plaster'
+  | 'drywall'
+  | 'foam'
+  | 'concrete'
+  | 'fabric'
+  | 'oak';
 
 export type Reverb = {
   // Length of the reverb tail in seconds.
@@ -44,7 +53,7 @@ export const ROOMS: Room[] = [
   {
     id: 'studio',
     name: 'Studio',
-    blurb: 'Wood and diffusers. Warm and controlled.',
+    blurb: 'Wood floor, diffusers on the walls. Warm and controlled.',
     reverb: {
       seconds: 1.4,
       decay: 3.2,
@@ -52,7 +61,7 @@ export const ROOMS: Room[] = [
       wet: 0.3,
       recording: `${reverbs}/sound-room-a.wav`,
     },
-    look: { margin: 1.5, height: 5, walls: 'wood', floor: 'wood', warm: '#ffb070', cool: '#ffd7a0' },
+    look: { margin: 1.5, height: 5, walls: 'drywall', floor: 'parquet', warm: '#ffb070', cool: '#ffd7a0' },
   },
   {
     id: 'club',

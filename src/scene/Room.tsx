@@ -1,14 +1,21 @@
-import { useEffect, useMemo } from 'react';
+import { Suspense, useEffect, useMemo } from 'react';
+import { CanvasTexture, type MeshStandardMaterial, type Texture } from 'three';
 import type { Room as RoomPreset } from '../rooms';
 import { STAGE } from '../stems';
-import { surfaceTexture } from './surfaces';
+import { Model, ModelBoundary } from './Model';
+import { surfaceCanvas, surfaceTexture } from './surfaces';
 
 const STAGE_WIDTH = STAGE.maxX - STAGE.minX;
 const FRONT = STAGE.listenerZ + 3;
 
+// Wall to wall, in meters.
+export function roomWidth(room: RoomPreset) {
+  return STAGE_WIDTH + room.look.margin * 2 + 1;
+}
+
 export function Room({ room }: { room: RoomPreset }) {
   const { margin, height, walls, floor } = room.look;
-  const width = STAGE_WIDTH + margin * 2 + 1;
+  const width = roomWidth(room);
   const back = STAGE.minZ - margin;
   const depth = FRONT - back;
   const midZ = (back + FRONT) / 2;
@@ -27,7 +34,8 @@ export function Room({ room }: { room: RoomPreset }) {
     <group>
       <mesh rotation-x={-Math.PI / 2} position={[0, 0, midZ]} receiveShadow>
         <planeGeometry args={[width, depth]} />
-        <meshStandardMaterial map={textures.floor} roughness={0.85} />
+        {/* Parquet is varnished, so it catches the lights. */}
+        <meshStandardMaterial map={textures.floor} roughness={floor === 'parquet' ? 0.45 : 0.85} />
       </mesh>
 
       {/* Stage area: where instruments can go */}
@@ -49,7 +57,13 @@ export function Room({ room }: { room: RoomPreset }) {
         <meshStandardMaterial map={textures.side} roughness={0.95} />
       </mesh>
 
-      {room.id === 'studio' && <Diffusers back={back} />}
+      {room.id === 'studio' && (
+        <>
+          <Diffusers back={back} />
+          <AbsorptionPanels width={width} />
+          <Door width={width} />
+        </>
+      )}
       {room.id === 'hall' && <Columns width={width} back={back} height={height} />}
 
       <pointLight position={[-width / 2 + 1, height * 0.7, -2]} intensity={14} color={room.look.warm} />
@@ -81,6 +95,133 @@ function Diffusers({ back }: { back: number }) {
           </mesh>
         )),
       )}
+    </group>
+  );
+}
+
+// One large cloth-covered absorber on each side wall, beside the stage.
+function AbsorptionPanels({ width }: { width: number }) {
+  const length = 3.6;
+  const tall = 2;
+  const thick = 0.1;
+  const texture = useMemo(() => surfaceTexture('fabric', length, tall), []);
+  useEffect(() => () => texture.dispose(), [texture]);
+  return (
+    <group>
+      {[-1, 1].map((side) => (
+        <mesh
+          key={side}
+          position={[side * (width / 2 - thick / 2), 2.5, -2.6]}
+          rotation-y={(-side * Math.PI) / 2}
+          castShadow
+          receiveShadow
+        >
+          <boxGeometry args={[length, tall, thick]} />
+          <meshStandardMaterial map={texture} roughness={1} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+// A steel commercial door on the left wall, in front of the absorption panel. The door
+// leaf is a model (local only like the instruments, so if the file is missing only the
+// frame shows); the frame is drawn here.
+const DOOR = `${import.meta.env.BASE_URL}3d/commercial_doors.glb`;
+const DOOR_HEIGHT = 2.1;
+const DOOR_WIDTH = 0.91;
+const JAMB = 0.07;
+
+// The push bar, latch rod and window trim are their own steel material (split off in
+// scripts/models.mjs). On the slab, the few spots its metalness map marks fully metal
+// become brushed steel too; everything else becomes oak, not metallic.
+const METAL = 200;
+const woodDone = new WeakSet<MeshStandardMaterial>();
+
+function pixels(image: CanvasImageSource, width: number, height: number) {
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d')!;
+  ctx.drawImage(image, 0, 0, width, height);
+  return { canvas, ctx, image: ctx.getImageData(0, 0, width, height) };
+}
+
+function copyTexture(from: Texture, canvas: HTMLCanvasElement) {
+  const texture = new CanvasTexture(canvas);
+  texture.flipY = from.flipY;
+  texture.colorSpace = from.colorSpace;
+  texture.wrapS = from.wrapS;
+  texture.wrapT = from.wrapT;
+  texture.channel = from.channel;
+  return texture;
+}
+
+function woodDoor(material: MeshStandardMaterial) {
+  const { map, metalnessMap } = material;
+  if (woodDone.has(material) || !map?.image || !metalnessMap?.image) return;
+  woodDone.add(material);
+  const { width, height } = map.image as { width: number; height: number };
+  const color = pixels(map.image as CanvasImageSource, width, height);
+  const finish = pixels(metalnessMap.image as CanvasImageSource, width, height);
+  const oak = pixels(surfaceCanvas('oak'), width, height).image.data;
+  const c = color.image.data;
+  const f = finish.image.data;
+  for (let i = 0; i < c.length; i += 4) {
+    if (f[i + 2] >= METAL) {
+      c[i] = 196;
+      c[i + 1] = 199;
+      c[i + 2] = 204;
+      // Roughness in green, metalness in blue.
+      f[i + 1] = 70;
+      f[i + 2] = 255;
+      continue;
+    }
+    c[i] = oak[i];
+    c[i + 1] = oak[i + 1];
+    c[i + 2] = oak[i + 2];
+    f[i + 1] = 180;
+    f[i + 2] = 0;
+  }
+  color.ctx.putImageData(color.image, 0, 0);
+  finish.ctx.putImageData(finish.image, 0, 0);
+  material.map = copyTexture(map, color.canvas);
+  material.metalnessMap = copyTexture(metalnessMap, finish.canvas);
+  material.metalnessMap.colorSpace = metalnessMap.colorSpace;
+  if (material.roughnessMap === metalnessMap) material.roughnessMap = material.metalnessMap;
+  material.needsUpdate = true;
+}
+
+function Door({ width }: { width: number }) {
+  // The frame is painted to match the walls.
+  const texture = useMemo(() => surfaceTexture('drywall', 0.5, DOOR_HEIGHT), []);
+  useEffect(() => () => texture.dispose(), [texture]);
+  const trim = <meshStandardMaterial map={texture} roughness={0.95} />;
+  return (
+    <group position={[-width / 2, 0, 2]}>
+      <ModelBoundary fallback={null}>
+        <Suspense fallback={null}>
+          {/* Turned so the side with the handle and window faces into the room. */}
+          <group position={[0.06, 0, 0]} rotation-y={Math.PI}>
+            <Model part={{ url: DOOR, size: DOOR_HEIGHT }} pickable={false} paint={woodDoor} />
+          </group>
+        </Suspense>
+      </ModelBoundary>
+      {[-1, 1].map((side) => (
+        <mesh
+          key={side}
+          position={[0.08, (DOOR_HEIGHT + JAMB) / 2, side * (DOOR_WIDTH / 2 + JAMB / 2)]}
+          castShadow
+          receiveShadow
+        >
+          <boxGeometry args={[0.16, DOOR_HEIGHT + JAMB, JAMB]} />
+          {trim}
+        </mesh>
+      ))}
+      <mesh position={[0.08, DOOR_HEIGHT + JAMB / 2, 0]} castShadow receiveShadow>
+        <boxGeometry args={[0.16, JAMB, DOOR_WIDTH + JAMB * 2]} />
+        {trim}
+      </mesh>
     </group>
   );
 }

@@ -90,7 +90,7 @@ left, vocal up front") and the instruments move themselves.
 
 | Room | Look | Reverb (tail, pre-delay, lowpass, wet) |
 |---|---|---|
-| Studio | wood walls and floor, quadratic residue diffusers (n² mod 7) | recorded (Sound Room A, 1.2 s), no lowpass (was 6.5 kHz), 0.30; synthetic fallback 1.4 s, 10 ms |
+| Studio | off-white drywall, chevron parquet floor, wooden quadratic residue diffusers (n² mod 7), a 3.6 × 2 m cloth absorption panel on each side wall, a steel door on the left wall | recorded (Sound Room A, 1.2 s), no lowpass (was 6.5 kHz), 0.30; synthetic fallback 1.4 s, 10 ms |
 | Brick club | brick, concrete floor | recorded (Cement Blocks, 1.5 s), 10 kHz, 0.40; synthetic fallback 1.2 s, 6 ms |
 | Concert hall | 14 m plaster walls, columns, much wider and deeper | recorded (La Scala, 2.0 s), 5 kHz, 0.42; synthetic fallback 3.2 s, 35 ms |
 | Dead room | acoustic foam | 0.4 s, 2 ms, 3.5 kHz, 0.12 |
@@ -159,6 +159,16 @@ left, vocal up front") and the instruments move themselves.
       -filter_complex "[0:a][1:a]join=inputs=2:channel_layout=stereo,atrim=start=0.049:duration=1.2,asetpts=PTS-STARTPTS,afade=t=out:st=0.9:d=0.3" \
       -c:a pcm_s24le public/reverbs/sound-room-a.wav
     ```
+- `public/3d/wood.jpeg` (gitignored with the models; source and license not yet recorded
+  here): a photo of wood grain, 1200 × 800. The Studio's chevron parquet floor is cut
+  from it in code (`paintParquet` in `src/scene/surfaces.ts`): planks 1.4 m long at 45
+  degrees, mirrored in alternate 1 m rows, each from a random strip of the photo with its
+  own tone, brightened and warmed toward amber, with low
+  contrast between planks. The photo is lit brighter in the middle, which made every plank
+  shade from light to dark and the floor look folded, so `evenOutLighting` divides out
+  that broad shading before the planks are cut, on a varnished floor (roughness 0.45). Until the photo loads, or if it's
+  missing, the floor shows the drawn planks. Reference look:
+  `reference/backgrounds/stage-piano-workstation-665814471.jpg`.
 - `public/3d/` (gitignored until we decide to publish models): instrument models as GLB.
   Originals go in `reference/models/<name>.original.glb`, untouched. `npm run models`
   (`scripts/models.mjs`) rebuilds `public/3d/` from them: per-model fixes, then
@@ -174,6 +184,19 @@ left, vocal up front") and the instruments move themselves.
     bronze (base 0.6/0.32/0.1, metallic 1, roughness 0.34). The original file shares one
     flat grey material across both, so this has to happen before `optimize` joins meshes.
     All of it lives in `prepareDrums` in `scripts/models.mjs`.
+  - `commercial_doors.glb` (Studio, left wall toward the front): "Commercial Doors" by
+    Delly, https://sketchfab.com/3d-models/commercial-doors-4d45cd37b2eb4577a96f82515b8ef684,
+    CC BY 4.0. The file is a frame holding three doors, one standing open; only the
+    closed door on the right is kept (`prepareDoors` in `scripts/models.mjs`), shown
+    2.1 m tall (0.91 m wide), turned so the handle side faces the room. Amber oak (toned to
+    sit with the cloth panels) with steel hardware. The build splits the push bar, its
+    bracket, the full-height latch rod and the window trim (every triangle inside the
+    window's box) into their own "Steel" material; the model's texture doesn't mark them
+    clearly enough to separate by color. On load, `woodDoor` (`src/scene/Room.tsx`) paints
+    the drawn `oak` grain over the rest and makes it non-metallic. The window is an
+    opening through the door, so it shows what's behind it. Its frame is
+    drawn in code, with the walls' drywall finish (`Door` in `src/scene/Room.tsx`), since the original frame is one
+    mesh spanning all three openings. 7 MB to 94 KB.
   - `electric_bass.glb`: "Electric bass" by Nixak,
     https://sketchfab.com/3d-models/electric-bass-c5927d3f189c4e2595078020ba84d305, CC BY 4.0.
   - `fender_stratocaster_guitar_blue.glb`: "Fender Stratocaster Guitar Blue" by

@@ -26,12 +26,16 @@ function studioReflections(gl: WebGLRenderer) {
 type Props = {
   part: ModelPart;
   onMeasure?: (height: number) => void;
+  // Room fixtures (doors and such) aren't dragged, so they skip the picking box.
+  pickable?: boolean;
+  // Changes the model's materials once loaded (e.g. a new finish).
+  paint?: (material: MeshStandardMaterial) => void;
 };
 
 // A loaded instrument, turned upright, scaled to its real-world size, centered on its
 // stage position and standing on the floor. Picking hits a simple box around it rather
 // than every triangle.
-export function Model({ part, onMeasure }: Props) {
+export function Model({ part, onMeasure, pickable = true, paint }: Props) {
   const { scene } = useGLTF(part.url, false);
   const gl = useThree((state) => state.gl);
 
@@ -49,6 +53,7 @@ export function Model({ part, onMeasure }: Props) {
         if (!(material instanceof MeshStandardMaterial)) continue;
         material.envMap = reflections;
         material.envMapIntensity = 0.6;
+        paint?.(material);
       }
     });
     object.rotation.set(x, y, z);
@@ -62,17 +67,19 @@ export function Model({ part, onMeasure }: Props) {
     object.scale.setScalar(scale);
     object.position.set(offset[0] - center.x * scale, -box.min.y * scale, offset[1] - center.z * scale);
     return { object, size: size.multiplyScalar(scale), offset };
-  }, [scene, part, gl]);
+  }, [scene, part, gl, paint]);
 
   useEffect(() => onMeasure?.(size.y), [size, onMeasure]);
 
   return (
     <group>
       <primitive object={object} />
-      <mesh position={[offset[0], size.y / 2, offset[1]]}>
-        <boxGeometry args={[size.x, size.y, size.z]} />
-        <meshBasicMaterial colorWrite={false} depthWrite={false} />
-      </mesh>
+      {pickable && (
+        <mesh position={[offset[0], size.y / 2, offset[1]]}>
+          <boxGeometry args={[size.x, size.y, size.z]} />
+          <meshBasicMaterial colorWrite={false} depthWrite={false} />
+        </mesh>
+      )}
     </group>
   );
 }
