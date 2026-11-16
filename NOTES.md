@@ -159,12 +159,15 @@ left, vocal up front") and the instruments move themselves.
       -filter_complex "[0:a][1:a]join=inputs=2:channel_layout=stereo,atrim=start=0.049:duration=1.2,asetpts=PTS-STARTPTS,afade=t=out:st=0.9:d=0.3" \
       -c:a pcm_s24le public/reverbs/sound-room-a.wav
     ```
-- `public/3d/wood.jpeg` (gitignored with the models; source and license not yet recorded
-  here): a photo of wood grain, 1200 × 800. The Studio's chevron parquet floor is cut
+- `public/3d/4727355663_b52966c3e6_b.jpg` (gitignored with the models): "High Quality
+  Tileable Light Wood Texture 1" by webtreats,
+  https://www.flickr.com/photos/webtreatsetc/4727355663/, CC BY 2.0. Seamless vertical
+  wood planks, 1024 × 1024. It replaced `wood.jpeg`, whose attribution couldn't
+  be found. The Studio's chevron parquet floor is cut
   from it in code (`paintParquet` in `src/scene/surfaces.ts`): planks 1.4 m long at 45
   degrees, mirrored in alternate 1 m rows, each from a random strip of the photo with its
-  own tone, brightened and warmed toward amber, with low
-  contrast between planks. The photo is lit brighter in the middle, which made every plank
+  own tone, lightly brightened and warmed toward amber, with low
+  contrast between planks. The first photo was lit brighter in the middle, which made every plank
   shade from light to dark and the floor look folded, so `evenOutLighting` divides out
   that broad shading before the planks are cut, on a varnished floor (roughness 0.45). Until the photo loads, or if it's
   missing, the floor shows the drawn planks. Reference look:

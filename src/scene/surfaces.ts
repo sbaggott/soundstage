@@ -179,7 +179,7 @@ const painters: Record<Surface, (ctx: CanvasRenderingContext2D, rand: () => numb
 // Chevron parquet: planks at 45 degrees, mirrored in alternate rows so they meet in a V,
 // each one cut from a photo of wood grain. Until the photo loads (or if it's missing,
 // since it's local only) the floor shows the plain drawn planks instead.
-const PARQUET_PHOTO = `${import.meta.env.BASE_URL}3d/wood.jpeg`;
+const PARQUET_PHOTO = `${import.meta.env.BASE_URL}3d/4727355663_b52966c3e6_b.jpg`;
 const PARQUET_SIZE = 1024;
 
 // The photo is lit unevenly, brighter in the middle. Cut into planks, that turns every
@@ -241,7 +241,7 @@ function paintParquet(ctx: CanvasRenderingContext2D, photo: HTMLImageElement, ra
     for (let k = 0; k < 8; k++) {
       // Each plank gets its own piece of the photo and a slight change of tone.
       const sy = rand() * (grain.height - stripHeight);
-      const tone = 1.8 + rand() * 0.15;
+      const tone = 1.35 + rand() * 0.12;
       // Drawn at three heights so planks crossing the top or bottom edge wrap.
       for (const wrap of [-PARQUET_SIZE, 0, PARQUET_SIZE]) {
         ctx.save();
@@ -251,7 +251,7 @@ function paintParquet(ctx: CanvasRenderingContext2D, photo: HTMLImageElement, ra
         ctx.translate(x + rowWidth / 2, k * step + wrap);
         ctx.rotate(angle);
         // Warmed toward amber, like a varnished floor.
-        ctx.filter = `brightness(${tone}) contrast(0.75) sepia(0.55) saturate(1.7)`;
+        ctx.filter = `brightness(${tone}) contrast(0.65) sepia(0.4) saturate(1.45)`;
         ctx.drawImage(grain, 0, sy, grain.width, stripHeight, -length / 2, -thickness / 2, length, thickness);
         ctx.filter = 'none';
         ctx.strokeStyle = 'rgb(40 22 10 / 0.3)';
