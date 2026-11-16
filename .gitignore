@@ -10,5 +10,3 @@ reference/
 .idea/
 # Placeholder stems from someone else's song. Local only.
 public/audio/
-# 3D models until each license is confirmed. Local only.
-public/3d/

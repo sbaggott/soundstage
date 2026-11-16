@@ -159,7 +159,7 @@ left, vocal up front") and the instruments move themselves.
       -filter_complex "[0:a][1:a]join=inputs=2:channel_layout=stereo,atrim=start=0.049:duration=1.2,asetpts=PTS-STARTPTS,afade=t=out:st=0.9:d=0.3" \
       -c:a pcm_s24le public/reverbs/sound-room-a.wav
     ```
-- `public/3d/4727355663_b52966c3e6_b.jpg` (gitignored with the models): "High Quality
+- `public/3d/4727355663_b52966c3e6_b.jpg` (committed 2026-11-16): "High Quality
   Tileable Light Wood Texture 1" by webtreats,
   https://www.flickr.com/photos/webtreatsetc/4727355663/, CC BY 2.0. Seamless vertical
   wood planks, 1024 × 1024. It replaced `wood.jpeg`, whose attribution couldn't
@@ -172,7 +172,7 @@ left, vocal up front") and the instruments move themselves.
   that broad shading before the planks are cut, on a varnished floor (roughness 0.45). Until the photo loads, or if it's
   missing, the floor shows the drawn planks. Reference look:
   `reference/backgrounds/stage-piano-workstation-665814471.jpg`.
-- `public/3d/` (gitignored until we decide to publish models): instrument models as GLB.
+- `public/3d/` (committed 2026-11-16, every model credited in the README): instrument models as GLB.
   Originals go in `reference/models/<name>.original.glb`, untouched. `npm run models`
   (`scripts/models.mjs`) rebuilds `public/3d/` from them: per-model fixes, then
   `gltf-transform optimize` with meshopt geometry and WebP textures (the meshopt decoder

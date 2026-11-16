@@ -13,9 +13,7 @@ npm install
 npm run dev
 ```
 
-The audio stems and 3D models aren't in the repo yet. Without stems there's nothing to
-play. Without models, each instrument shows as a colored cylinder and the Studio floor
-uses drawn planks in place of the wood texture.
+The audio stems aren't in the repo yet, so for now there's nothing to play.
 
 ## Credits
 
