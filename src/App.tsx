@@ -3,6 +3,7 @@ import { AudioEngine } from './audio/engine';
 import { DEFAULT_ROOM, getRoom, type RoomId } from './rooms';
 import { Stage } from './scene/Stage';
 import { STEMS, type StagePosition, type StemId } from './stems';
+import { Credits } from './ui/Credits';
 import { RoomPicker } from './ui/RoomPicker';
 import { Transport } from './ui/Transport';
 
@@ -77,7 +78,10 @@ export function App() {
           </div>
           <RoomPicker value={roomId} onChange={chooseRoom} mix={mix} onMixChange={chooseMix} />
           <Transport engine={engine} onReset={reset} />
-          <p className="app__hint">Headphones recommended. Drag the room to look around.</p>
+          <div className="app__hint">
+            <span className="app__hint-text">Headphones recommended. Drag the room to look around.</span>{' '}
+            <Credits />
+          </div>
         </>
       ) : (
         <div className="app__loading" role="status">

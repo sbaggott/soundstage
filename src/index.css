@@ -74,6 +74,119 @@ body {
   pointer-events: none;
 }
 
+.credits__open {
+  padding: 0;
+  margin-left: 4px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.credits__open:hover,
+.credits__open:focus-visible {
+  color: var(--text);
+}
+
+.credits {
+  /* It sits inside the hint line, which lets clicks through to the stage. */
+  pointer-events: auto;
+  text-align: left;
+  width: min(560px, calc(100% - 32px));
+  max-height: calc(100% - 32px);
+  padding: 0;
+  color: var(--text);
+  background: rgb(30 22 17 / 0.96);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.credits::backdrop {
+  background: rgb(0 0 0 / 0.55);
+}
+
+.credits__body {
+  padding: 20px 24px 24px;
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.credits__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.credits h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.credits__close {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--text-muted);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.credits__close:hover,
+.credits__close:focus-visible {
+  color: var(--text);
+  background: rgb(255 255 255 / 0.06);
+}
+
+.credits__thanks {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+}
+
+.credits h3 {
+  margin: 18px 0 6px;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.credits ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.credits li {
+  display: grid;
+  grid-template-columns: 9.5em 1fr;
+  gap: 12px;
+  padding: 5px 0;
+  border-top: 1px solid var(--border);
+}
+
+.credits__use {
+  color: var(--text-muted);
+}
+
+.credits a {
+  color: var(--accent);
+  text-underline-offset: 2px;
+}
+
+@media (max-width: 480px) {
+  .credits li {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}
+
 .app__loading {
   display: grid;
   place-content: center;
@@ -342,7 +455,7 @@ body {
     overflow-x: auto;
   }
 
-  .app__hint {
+  .app__hint-text {
     display: none;
   }
 }
