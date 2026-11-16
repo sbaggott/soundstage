@@ -1,8 +1,8 @@
 # Soundstage: project notes
 
 The working notes for Soundstage: what it is, decisions made, the build plan and open
-questions. Keep this current as the project moves. It started in Sage's job-search repo
-(`sisyphus`, `loop/PORTFOLIO.md`) and moved here on 2026-10-28.
+questions. Keep this current as the project moves. It moved into its own repo on
+2026-10-28.
 
 ## What it is
 
@@ -11,29 +11,28 @@ you can move around, and you hear it move: left and right, near and far, in room
 sound different. Then describe the mix in plain language ("push the drums back, horns hard
 left, vocal up front") and the instruments move themselves.
 
-## Why it's worth building
+## Why build it
 
-- Draws directly on Boombox work: the stem splitter (one of its two most-used AI tools),
-  AI features for musicians, and audio on the frontend.
+- Builds on audio and AI work I've done for musicians: stem splitting and audio in the
+  browser.
 - New territory alongside it: 3D (React Three Fiber) and spatial audio.
-- AI-native in the way companies hiring now care about: the model returns typed actions,
-  the app validates them, and only then applies them. This is the validation step the
-  Boombox chord generator never had.
+- The AI is constrained: the model returns typed actions, the app validates them, and
+  only then applies them.
 - Built on my own music, so everything is publishable and the demo shows my playing.
 - First of three planned demos: Soundstage, then the overdub recorder, then Resonance.
 
 ## Decisions
 
-- **Own repo**, public on GitHub when ready. Job-search notes stay in `sisyphus` (private).
+- **Own repo**, public on GitHub.
 - **Audio: my own songs only** for anything public. The app now plays my own song, "She's
   Seated At The Table" (6 stems, swapped in 2026-11-16). The stems are committed in
   `public/audio/shes-seated/`. The old placeholder stems ("Shoulda Never", someone else's
   song) were deleted and were never committed.
-- **Ship a demo song already separated**, so a recruiter hears music within a couple of
+- **Ship a demo song already separated**, so a visitor hears music within a couple of
   seconds. Upload-and-separate is the second path: slow (tens of seconds to minutes), costs
   money per run, needs file-size limits and a progress UI.
 - **Stack:** React, Vite, TypeScript, React Three Fiber (+ drei), Web Audio API directly
-  (PannerNode with HRTF, ConvolverNode). Raw Web Audio over a wrapper: better interview story.
+  (PannerNode with HRTF, ConvolverNode). Raw Web Audio over a wrapper, to keep full control of the audio graph.
 - **Dragging moves instruments along the floor plane.** The mouse ray is intersected with
   the floor, so screen X/Y maps to stage left/right and front/back with no depth guessing.
   The depth buffer handles draw order; the raycaster picks the nearest instrument under the
