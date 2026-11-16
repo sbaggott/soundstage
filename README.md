@@ -4,6 +4,8 @@ A song split into stems, with each stem placed as an instrument on a 3D stage. D
 instruments around and you hear them move: left and right, near and far. Switch between
 four rooms (Studio, Brick club, Concert hall, Dead room) and the reverb changes with the room.
 
+**Live:** https://soundstage.sagebaggott.com
+
 Built with React, TypeScript, Vite, React Three Fiber and the Web Audio API.
 
 ## Running it
@@ -12,6 +14,31 @@ Built with React, TypeScript, Vite, React Three Fiber and the Web Audio API.
 npm install
 npm run dev
 ```
+
+## Deploying
+
+The live site is a Cloudflare Worker that serves the built files, set up in
+`wrangler.jsonc`. Pushing to GitHub doesn't deploy anything; deploys are run by hand.
+
+1. Log in to Cloudflare once per machine, with the account that has `sagebaggott.com`:
+
+   ```
+   npx wrangler login
+   ```
+
+2. Build and deploy:
+
+   ```
+   npm run deploy
+   ```
+
+   This runs a production build into `dist/` and uploads it. The change is live at
+   https://soundstage.sagebaggott.com within a few seconds. Only changed files are
+   uploaded, so later deploys are quicker than the first.
+
+To undo a bad deploy, `npx wrangler rollback` goes back to the previous version. For an
+older one, find its ID with `npx wrangler versions list` and run
+`npx wrangler rollback <version-id>`.
 
 ## Credits
 
