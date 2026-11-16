@@ -13,9 +13,11 @@ npm install
 npm run dev
 ```
 
-The audio stems aren't in the repo yet, so for now there's nothing to play.
-
 ## Credits
+
+### Music
+
+"She's Seated At The Table" by [Sage Baggott](https://sagebaggott.com).
 
 Thanks to everyone below for sharing their work.
 
@@ -29,11 +31,9 @@ listed with each one.
 |---|---|---|---|
 | Drums | [Drum Kit](https://sketchfab.com/3d-models/drum-kit-898f2f4ba1704abe9c784066e2b0f751) | art.katja | Removed the floor mat and a spare cymbal. New chrome and bronze materials. |
 | Bass | [Electric bass](https://sketchfab.com/3d-models/electric-bass-c5927d3f189c4e2595078020ba84d305) | Nixak | |
-| Guitar | [Fender Stratocaster Guitar Blue](https://sketchfab.com/3d-models/fender-stratocaster-guitar-blue-96a79610434f43b2ac2a09a636afc5d4) | YieldingMist206 | |
+| Electric Guitar | [Fender Stratocaster Guitar Blue](https://sketchfab.com/3d-models/fender-stratocaster-guitar-blue-96a79610434f43b2ac2a09a636afc5d4) | YieldingMist206 | |
+| Hollowbody Guitar | [Meshcaster Semi-Acoustic Guitar](https://sketchfab.com/3d-models/meshcaster-semi-acoustic-guitar-2d4e22c16e824fe18fed2a32a6f18f54) | Fredrik Johansen | |
 | Keys | [Black_paino](https://sketchfab.com/3d-models/black-paino-3d64ece48827490e8fd4321f9050d8f0) | meshplalette66 | |
-| Horns | [Saxophone](https://sketchfab.com/3d-models/saxophone-f72747715883480b9555a75558b3e9cd) | Matt Caddie | |
-| Horns | [Trumpet](https://sketchfab.com/3d-models/trumpet-1dc9efd37bf14d1b9d1e3de0ca90435c) | Kagelok | |
-| Strings | [Violin](https://sketchfab.com/3d-models/violin-0162dea1b1044cd281c57af5e5fc2046) | Voldepreuss | |
 | Vocal | [microphone](https://sketchfab.com/3d-models/microphone-545b82406abf465cb0fd91a4be42ac05) | ssmilerok | New metal-roughness materials, since three.js no longer reads the original ones. |
 | Studio door | [Commercial Doors](https://sketchfab.com/3d-models/commercial-doors-4d45cd37b2eb4577a96f82515b8ef684) | Delly | Kept one of the three doors. Split the hardware into a steel material and repainted the rest as oak. The frame is drawn in code. |
 

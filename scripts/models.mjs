@@ -161,11 +161,9 @@ const MODELS = {
   drum_kit: { prepare: prepareDrums },
   electric_bass: {},
   fender_stratocaster_guitar_blue: {},
+  hollowbody_guitar: {},
   microphone: { prepare: prepareMicrophone },
   piano: {},
-  saxophone: {},
-  trumpet: {},
-  violin: {},
 };
 
 const io = new NodeIO().registerExtensions(ALL_EXTENSIONS);

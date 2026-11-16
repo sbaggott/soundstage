@@ -68,7 +68,7 @@ export function App() {
     <main className="app">
       <header className="app__header">
         <h1>Soundstage</h1>
-        <p>“Shoulda Never” · drag the instruments around the stage and listen to the mix change</p>
+        <p>“She’s Seated At The Table” · drag the instruments around the stage and listen to the mix change</p>
       </header>
 
       {engine ? (

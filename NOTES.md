@@ -25,9 +25,10 @@ left, vocal up front") and the instruments move themselves.
 ## Decisions
 
 - **Own repo**, public on GitHub when ready. Job-search notes stay in `sisyphus` (private).
-- **Audio: my own songs only** for anything public. The current stems ("Shoulda Never", 7
-  stems) are **placeholders from someone else's song**: local only, never committed.
-  `public/audio/` is gitignored for this reason. Swap in my own stems before deploying.
+- **Audio: my own songs only** for anything public. The app now plays my own song, "She's
+  Seated At The Table" (6 stems, swapped in 2026-11-16). The stems are committed in
+  `public/audio/shes-seated/`. The old placeholder stems ("Shoulda Never", someone else's
+  song) were deleted and were never committed.
 - **Ship a demo song already separated**, so a recruiter hears music within a couple of
   seconds. Upload-and-separate is the second path: slow (tens of seconds to minutes), costs
   money per run, needs file-size limits and a progress UI.
@@ -118,10 +119,10 @@ left, vocal up front") and the instruments move themselves.
 
 ## Assets
 
-- `public/audio/shoulda-never/` (gitignored, placeholders, not my song): bass, drums,
-  guitar, horns, keys, strings, vox. (Vinyl FX stem dropped 2026-10-28.) A fresh clone has no audio; copy the stems
-  into that folder to run it.
-  320 kbps MP3, 44.1 kHz stereo. Lengths vary from 56.4 s to 60.9 s.
+- `public/audio/shes-seated/` (committed 2026-11-16): my song. bass, drums,
+  `guitar electric`, `guitar hollowbody`, keys, vox. 320 kbps MP3, 44.1 kHz stereo, all
+  5:27 (327.3 s), 13 MB each. The guitar files have spaces in their names, so
+  `src/stems.ts` URL-encodes them.
 - `reference/backgrounds/`: mood images, not for publishing.
 - `public/reverbs/` (committed; all three licenses confirmed 2026-10-31): recorded impulse
   responses. A room with `reverb.recording` set in `src/rooms.ts` uses it instead of the
@@ -208,13 +209,13 @@ left, vocal up front") and the instruments move themselves.
     CC BY 4.0.
   - `piano.glb` (a stage keyboard on an X stand): "Black_paino" by meshplalette66,
     https://sketchfab.com/3d-models/black-paino-3d64ece48827490e8fd4321f9050d8f0, CC BY 4.0.
-  - `saxophone.glb`: "Saxophone" by Matt Caddie,
-    https://sketchfab.com/3d-models/saxophone-f72747715883480b9555a75558b3e9cd, CC BY 4.0.
-  - `trumpet.glb`: "Trumpet" by Kagelok,
-    https://sketchfab.com/3d-models/trumpet-1dc9efd37bf14d1b9d1e3de0ca90435c, CC BY 4.0.
-  - `violin.glb`: "Violin" by Voldepreuss,
-    https://sketchfab.com/3d-models/violin-0162dea1b1044cd281c57af5e5fc2046, CC BY 4.0.
-    (Replaced a CC BY-NC violin on 2026-10-30.)
+  - `hollowbody_guitar.glb` (Hollowbody Guitar, replaced the horns 2026-11-16):
+    "Meshcaster Semi-Acoustic Guitar" by Fredrik Johansen (kird3rf),
+    https://sketchfab.com/3d-models/meshcaster-semi-acoustic-guitar-2d4e22c16e824fe18fed2a32a6f18f54, CC BY 4.0. Stood up with
+    rotation [π/2, 0, 0], 1.05 m long. 13 MB to 1.1 MB.
+  - Removed 2026-11-16, when the song changed to one without horns or strings: the sax
+    ("Saxophone" by Matt Caddie), trumpet ("Trumpet" by Kagelok) and violin ("Violin" by
+    Voldepreuss). They're still in git history and in `reference/models/`.
   - `microphone.glb` (on a straight stand, for the vocal): "microphone" by ssmilerok,
     https://sketchfab.com/3d-models/microphone-545b82406abf465cb0fd91a4be42ac05, CC BY 4.0.
     It uses specular-glossiness materials, which three.js no longer reads (every part came

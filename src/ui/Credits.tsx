@@ -1,21 +1,25 @@
 import { useRef } from 'react';
 
-type Credit = { use: string; title: string; author: string; url?: string; license: string };
+type Credit = { use: string; title: string; author: string; url?: string; authorUrl?: string; license?: string };
 
 const CC_BY_4 = 'CC BY 4.0';
 
 // Keep in step with the credits in README.md.
 const SECTIONS: { heading: string; credits: Credit[] }[] = [
   {
+    heading: 'Music',
+    credits: [
+      { use: 'Song', title: 'She’s Seated At The Table', author: 'Sage Baggott', authorUrl: 'https://sagebaggott.com' },
+    ],
+  },
+  {
     heading: '3D models',
     credits: [
       { use: 'Drums', title: 'Drum Kit', author: 'art.katja', url: 'https://sketchfab.com/3d-models/drum-kit-898f2f4ba1704abe9c784066e2b0f751', license: CC_BY_4 },
       { use: 'Bass', title: 'Electric bass', author: 'Nixak', url: 'https://sketchfab.com/3d-models/electric-bass-c5927d3f189c4e2595078020ba84d305', license: CC_BY_4 },
-      { use: 'Guitar', title: 'Fender Stratocaster', author: 'YieldingMist206', url: 'https://sketchfab.com/3d-models/fender-stratocaster-guitar-blue-96a79610434f43b2ac2a09a636afc5d4', license: CC_BY_4 },
+      { use: 'Electric Guitar', title: 'Fender Stratocaster', author: 'YieldingMist206', url: 'https://sketchfab.com/3d-models/fender-stratocaster-guitar-blue-96a79610434f43b2ac2a09a636afc5d4', license: CC_BY_4 },
+      { use: 'Hollowbody Guitar', title: 'Meshcaster Semi-Acoustic Guitar', author: 'Fredrik Johansen', url: 'https://sketchfab.com/3d-models/meshcaster-semi-acoustic-guitar-2d4e22c16e824fe18fed2a32a6f18f54', license: CC_BY_4 },
       { use: 'Keys', title: 'Piano', author: 'meshplalette66', url: 'https://sketchfab.com/3d-models/black-paino-3d64ece48827490e8fd4321f9050d8f0', license: CC_BY_4 },
-      { use: 'Horns', title: 'Saxophone', author: 'Matt Caddie', url: 'https://sketchfab.com/3d-models/saxophone-f72747715883480b9555a75558b3e9cd', license: CC_BY_4 },
-      { use: 'Horns', title: 'Trumpet', author: 'Kagelok', url: 'https://sketchfab.com/3d-models/trumpet-1dc9efd37bf14d1b9d1e3de0ca90435c', license: CC_BY_4 },
-      { use: 'Strings', title: 'Violin', author: 'Voldepreuss', url: 'https://sketchfab.com/3d-models/violin-0162dea1b1044cd281c57af5e5fc2046', license: CC_BY_4 },
       { use: 'Vocal', title: 'Microphone', author: 'ssmilerok', url: 'https://sketchfab.com/3d-models/microphone-545b82406abf465cb0fd91a4be42ac05', license: CC_BY_4 },
       { use: 'Studio door', title: 'Commercial Doors', author: 'Delly', url: 'https://sketchfab.com/3d-models/commercial-doors-4d45cd37b2eb4577a96f82515b8ef684', license: CC_BY_4 },
     ],
@@ -67,9 +71,11 @@ export function Credits() {
               ×
             </button>
           </div>
-          <p className="credits__thanks">Thanks to everyone below for sharing their work.</p>
           {SECTIONS.map((section) => (
             <section key={section.heading}>
+              {section.heading === '3D models' && (
+                <p className="credits__thanks">Thanks to everyone below for sharing their work.</p>
+              )}
               <h3>{section.heading}</h3>
               <ul>
                 {section.credits.map((credit) => (
@@ -83,10 +89,22 @@ export function Credits() {
                       ) : (
                         credit.title
                       )}{' '}
-                      by {credit.author},{' '}
-                      <a href={LICENSES[credit.license]} {...external}>
-                        {credit.license}
-                      </a>
+                      by{' '}
+                      {credit.authorUrl ? (
+                        <a href={credit.authorUrl} {...external}>
+                          {credit.author}
+                        </a>
+                      ) : (
+                        credit.author
+                      )}
+                      {credit.license && (
+                        <>
+                          ,{' '}
+                          <a href={LICENSES[credit.license]} {...external}>
+                            {credit.license}
+                          </a>
+                        </>
+                      )}
                     </span>
                   </li>
                 ))}

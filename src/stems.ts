@@ -2,9 +2,8 @@ export type StemId =
   | 'drums'
   | 'bass'
   | 'keys'
-  | 'guitar'
-  | 'horns'
-  | 'strings'
+  | 'electric'
+  | 'hollowbody'
   | 'vox';
 
 export type StagePosition = { x: number; z: number };
@@ -15,7 +14,7 @@ export type Stem = {
   url: string;
   color: string;
   home: StagePosition;
-  // 3D models to show instead of the placeholder. More than one shares the spot (horns).
+  // 3D models to show instead of the placeholder. More than one can share the spot.
   models?: ModelPart[];
   // Radius of the level ring around the models, in meters.
   footprint?: number;
@@ -31,7 +30,7 @@ export type ModelPart = {
   offset?: [number, number];
 };
 
-const base = `${import.meta.env.BASE_URL}audio/shoulda-never`;
+const base = `${import.meta.env.BASE_URL}audio/shes-seated`;
 const models = `${import.meta.env.BASE_URL}3d`;
 
 // Stage coordinates in meters. x runs stage left (-) to stage right (+), z runs from the
@@ -74,36 +73,22 @@ export const STEMS: Stem[] = [
     footprint: 0.95,
   },
   {
-    id: 'guitar',
-    label: 'Guitar',
-    url: `${base}/guitar.mp3`,
+    id: 'electric',
+    label: 'Electric Guitar',
+    url: `${base}/${encodeURIComponent('guitar electric.mp3')}`,
     color: '#9bc53d',
     home: { x: -3.6, z: -1.4 },
     models: [{ url: `${models}/fender_stratocaster_guitar_blue.glb`, size: 1, rotation: [0, 0, Math.PI / 2] }],
     footprint: 0.5,
   },
   {
-    id: 'horns',
-    label: 'Horns',
-    url: `${base}/horns.mp3`,
+    id: 'hollowbody',
+    label: 'Hollowbody Guitar',
+    url: `${base}/${encodeURIComponent('guitar hollowbody.mp3')}`,
     color: '#f2c14e',
     home: { x: 3.8, z: -1 },
-    models: [
-      // Larger than life (sax 1.5x, trumpet 1.2x), so they read next to the drums.
-      { url: `${models}/saxophone.glb`, size: 1.05, offset: [-0.3, 0] },
-      { url: `${models}/trumpet.glb`, size: 0.6, offset: [0.4, 0] },
-    ],
-    footprint: 0.8,
-  },
-  {
-    id: 'strings',
-    label: 'Strings',
-    url: `${base}/strings.mp3`,
-    color: '#b48ead',
-    home: { x: -4.6, z: -4.4 },
-    // 1.5x life size, so it reads next to the drums.
-    models: [{ url: `${models}/violin.glb`, size: 0.9, rotation: [Math.PI / 2, 0, 0] }],
-    footprint: 0.45,
+    models: [{ url: `${models}/hollowbody_guitar.glb`, size: 1.05, rotation: [Math.PI / 2, 0, 0] }],
+    footprint: 0.55,
   },
   {
     id: 'vox',
